@@ -412,9 +412,6 @@ def load_configuration():
         config['binance_coins']['correlation_less_than'])
     paired_coin = config['binance_coins']['paired_coin']
     history_start = config['binance_coins']['history_start']
-    coin_history_file = config['binance_coins']['coin_history_file']
-    used_coins_file = config['binance_coins']['used_coins_file']
-    ignored_coins_file = config['binance_coins']['ignored_coins_file']
     client = Client(binance_api_key, binance_api_secret_key)
 
 
