@@ -1,13 +1,11 @@
-from datetime import datetime
 import pandas as pd
 import numpy as np
-import os
 from binance.client import Client
-from binance.exceptions import BinanceAPIException, BinanceWithdrawException
-from requests import Request, Session
+from binance.exceptions import BinanceAPIException
+from requests import Session
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
-import time
 import itertools as it
+import os
 import json
 import math
 import sys
@@ -26,7 +24,7 @@ paired_coin = "USDT"
 history_start = "90 day ago UTC"
 history_interval = Client.KLINE_INTERVAL_12HOUR
 coin_history_file = 'historical_klines.json'
-all_coins_file = 'all_coins'
+used_coins_file = 'used_coins'
 ignored_coins_file = 'ignored_coins'
 
 client = Client()
@@ -124,6 +122,7 @@ def get_coins_history(coin_list, bridge):
                 coin+bridge, history_interval, history_start)
             klines[coin] = coin_klines
         except BinanceAPIException as e:
+            print("Error"+str(e))
             pass
         count = count + 1
 
@@ -142,11 +141,12 @@ def get_one_correlated_values(correlated_coin):
     verify_coins_files()
 
     coins_history = read_coins_history_file()
-    ignored_coins = get_coins_from_file(ignored_coins_file)
+    ignored_coins = get_coins_from_file(
+        ignored_coins_file) if os.path.isfile(ignored_coins_file) else []
 
     coin_list = []
     [coin_list.append(x) for x in get_coins_from_file(
-        all_coins_file)[:first_n_coins] if x in coins_history and x not in ignored_coins]
+        used_coins_file)[:first_n_coins] if x in coins_history and x not in ignored_coins]
 
     if correlated_coin not in coins_history:
         raise Exception("Coin not found")
@@ -162,7 +162,7 @@ def get_one_correlated_values(correlated_coin):
             coins_history[coins[0]]['normalized'].tolist(), coins_history[coins[1]]['normalized'].tolist())})
 
     filtered_correlations = [
-        c for c in correlations if c['correlation'] > correlation_greater_than and c['correlation'] < correlation_less_than]
+        c for c in correlations if c['correlation'] > correlation_greater_than and c['correlation'] <= correlation_less_than]
     sorted_correlations = sorted(
         filtered_correlations, key=lambda i: i['correlation'])
 
@@ -174,11 +174,12 @@ def get_one_correlated_list(correlated_coin):
     verify_coins_files()
 
     coins_history = read_coins_history_file()
-    ignored_coins = get_coins_from_file(ignored_coins_file)
+    ignored_coins = get_coins_from_file(
+        ignored_coins_file) if os.path.isfile(ignored_coins_file) else []
 
     coin_list = []
     [coin_list.append(x) for x in get_coins_from_file(
-        all_coins_file)[:first_n_coins] if x in coins_history and x not in ignored_coins]
+        used_coins_file)[:first_n_coins] if x in coins_history and x not in ignored_coins]
 
     if correlated_coin not in coins_history:
         raise Exception("Coin not found")
@@ -194,7 +195,7 @@ def get_one_correlated_list(correlated_coin):
             coins_history[coins[0]]['normalized'].tolist(), coins_history[coins[1]]['normalized'].tolist())})
 
     filtered_correlations = [
-        c for c in correlations if c['correlation'] > correlation_greater_than and c['correlation'] < correlation_less_than]
+        c for c in correlations if c['correlation'] > correlation_greater_than and c['correlation'] <= correlation_less_than]
     sorted_correlations = sorted(
         filtered_correlations, key=lambda i: i['correlation'])
 
@@ -215,11 +216,12 @@ def get_all_correlated_values():
     verify_coins_files()
 
     coins_history = read_coins_history_file()
-    ignored_coins = get_coins_from_file(ignored_coins_file)
+    ignored_coins = get_coins_from_file(
+        ignored_coins_file) if os.path.isfile(ignored_coins_file) else []
 
     coin_list = []
     [coin_list.append(x) for x in get_coins_from_file(
-        all_coins_file)[:first_n_coins] if x in coins_history and x not in ignored_coins]
+        used_coins_file)[:first_n_coins] if x in coins_history and x not in ignored_coins]
 
     correlations = []
     sorted_correlations = {}
@@ -231,7 +233,7 @@ def get_all_correlated_values():
             coins_history[coins[0]]['normalized'].tolist(), coins_history[coins[1]]['normalized'].tolist())})
 
     filtered_correlations = [
-        c for c in correlations if c['correlation'] > correlation_greater_than and c['correlation'] < correlation_less_than]
+        c for c in correlations if c['correlation'] > correlation_greater_than and c['correlation'] <= correlation_less_than]
     sorted_correlations = sorted(
         filtered_correlations, key=lambda i: i['correlation'])
 
@@ -243,10 +245,11 @@ def get_all_correlated_grouped():
     verify_coins_files()
 
     coins_history = read_coins_history_file()
-    ignored_coins = get_coins_from_file(ignored_coins_file)
+    ignored_coins = get_coins_from_file(
+        ignored_coins_file) if os.path.isfile(ignored_coins_file) else []
     coin_list = []
     [coin_list.append(x) for x in get_coins_from_file(
-        all_coins_file)[:first_n_coins] if x in coins_history and x not in ignored_coins]
+        used_coins_file)[:first_n_coins] if x in coins_history and x not in ignored_coins]
 
     correlations = []
 
@@ -257,7 +260,7 @@ def get_all_correlated_grouped():
             coins_history[coins[0]]['normalized'].tolist(), coins_history[coins[1]]['normalized'].tolist())})
 
     filtered_correlations = [
-        c for c in correlations if c['correlation'] > correlation_greater_than and c['correlation'] < correlation_less_than]
+        c for c in correlations if c['correlation'] > correlation_greater_than and c['correlation'] <= correlation_less_than]
 
     group_correlations(filtered_correlations)
 
@@ -266,10 +269,11 @@ def get_all_correlated_list():
     verify_coins_files()
 
     coins_history = read_coins_history_file()
-    ignored_coins = get_coins_from_file(ignored_coins_file)
+    ignored_coins = get_coins_from_file(
+        ignored_coins_file) if os.path.isfile(ignored_coins_file) else []
     coin_list = []
     [coin_list.append(x) for x in get_coins_from_file(
-        all_coins_file)[:first_n_coins] if x in coins_history and x not in ignored_coins]
+        used_coins_file)[:first_n_coins] if x in coins_history and x not in ignored_coins]
 
     correlations = []
 
@@ -280,7 +284,7 @@ def get_all_correlated_list():
             coins_history[coins[0]]['normalized'].tolist(), coins_history[coins[1]]['normalized'].tolist())})
 
     filtered_correlations = [
-        c for c in correlations if c['correlation'] > correlation_greater_than and c['correlation'] < correlation_less_than]
+        c for c in correlations if c['correlation'] > correlation_greater_than and c['correlation'] <= correlation_less_than]
 
     correlated_coin_list = []
     filtered_correlated_coin_list = []
@@ -333,11 +337,11 @@ def group_correlations(correlations):
 def verify_coins_files():
     if not os.path.isfile(coin_history_file):
         raise Exception(
-            "Coin history '"+coin_history_file+"' not found, please run: coin.py --update-coins-history")
+            "Coin history '"+coin_history_file+"' not found, please run: binance_coins.py --update-coins-history")
 
-    if not os.path.isfile(all_coins_file):
+    if not os.path.isfile(used_coins_file):
         raise Exception(
-            "Top coins file '"+all_coins_file+"' not found, please run: coin.py --update-top-coins")
+            "Top coins file '"+used_coins_file+"' not found, please run: binance_coins.py --update-top-coins")
 
 
 def update_coin_historical_klines():
@@ -380,7 +384,7 @@ def update_top_ranked_coins():
     try:
         response = session.get(url, params=parameters)
         data = json.loads(response.text)
-        with open(all_coins_file, 'w') as writer:
+        with open(used_coins_file, 'w') as writer:
             for coin in data['data']:
                 writer.write(coin['symbol']+'\n')
         print("Top coin list stored successfully!")
@@ -389,7 +393,11 @@ def update_top_ranked_coins():
 
 
 def load_configuration():
-    global binance_api_key, binance_api_secret_key, coinmarketcap_api_key, client, first_n_coins, top_n_ranked_coins, correlation_greater_than, correlation_less_than, paired_coin, history_start, history_interval, coin_history_file, all_coins_file, ignored_coins_file
+    global binance_api_key, binance_api_secret_key, coinmarketcap_api_key, client, first_n_coins, top_n_ranked_coins, correlation_greater_than, correlation_less_than, paired_coin, history_start, history_interval, coin_history_file, used_coins_file, ignored_coins_file
+    if not os.path.isfile('config.ini'):
+        raise Exception(
+            "Configuration file 'config.ini' not found")
+
     config = configparser.ConfigParser()
     config.read('config.ini')
 
@@ -404,11 +412,29 @@ def load_configuration():
         config['binance_coins']['correlation_less_than'])
     paired_coin = config['binance_coins']['paired_coin']
     history_start = config['binance_coins']['history_start']
-    history_interval = config['binance_coins']['history_interval']
     coin_history_file = config['binance_coins']['coin_history_file']
-    all_coins_file = config['binance_coins']['all_coins_file']
+    used_coins_file = config['binance_coins']['used_coins_file']
     ignored_coins_file = config['binance_coins']['ignored_coins_file']
     client = Client(binance_api_key, binance_api_secret_key)
+
+
+def help():
+    print("")
+    print("Usage:")
+    print("\tbinance_coins.py [option]")
+    print("Options:")
+    print(
+        "\t--update-coins-history\t\t\tUpdates the historical price of all the coins in Binance.")
+    print(
+        "\t--update-top-coins\t\t\tUpdates 'used_coins' file with the 100 best coins in CoinMarketCap.")
+    print("\t--all-correlated-values\t\t\tCorrelation values of all coins in 'used_coins' file.")
+    print(
+        "\t--one-correlated-values <coin>\t\tCorrelation values of all coins in 'used_coins' file with one.")
+    print("\t--all-correlated-list\t\t\tList of all correlated coins in 'used_coins' file.")
+    print(
+        "\t--one-correlated-list <coin>\t\tList of all correlated coins in 'used_coins' file with one.")
+    print(
+        "\t--all-correlated-grouped\t\tList of all correlated coins in 'used_coins' file grouped by their relationship.")
 
 
 def main(argv):
@@ -417,23 +443,13 @@ def main(argv):
         opts, args = getopt.getopt(
             argv, "h", ["update-coins-history", "update-top-coins", "all-correlated-values", "one-correlated-values=", "all-correlated-list", "one-correlated-list=", "all-correlated-grouped"])
     except getopt.GetoptError:
-        print("usage:\t"+"coins.py [--option]")
+        print("usage:\t"+"binance_coins.py [option]")
         sys.exit(2)
+    if len(opts) <= 0:
+        help()
     for opt, arg in opts:
         if opt == '-h':
-            print("usage: coins.py""\t[--option value]")
-            print(
-                "\t[--update-coins-history]\t#Updates the historical price of all the coins in Binance.")
-            print(
-                "\t[--update-top-coins]\t\t#Updates the list of the 100 best coins in CoinMarketCap.")
-            print("\t[--all-correlated-values]\t#Correlation values of all coins.")
-            print(
-                "\t[--one-correlated-values coin]\t#Correlation values of all coins with one.")
-            print("\t[--all-correlated-list]\t\t#List of all correlated coins.")
-            print(
-                "\t[--one-correlated-list coin]\t#List of all correlated coins with one.")
-            print(
-                "\t[--all-correlated-grouped]\t#List of all correlated coins grouped by their relationship.")
+            help()
             sys.exit()
         elif opt in ("--update-coins-history"):
             update_coin_historical_klines()
