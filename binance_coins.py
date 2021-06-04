@@ -209,7 +209,7 @@ def get_one_correlated_list(correlated_coin):
     [filtered_correlated_coin_list.append(
         x) for x in correlated_coin_list if x not in filtered_correlated_coin_list]
 
-    print(filtered_correlated_coin_list)
+    print(sorted(filtered_correlated_coin_list))
 
 
 def get_all_correlated_values():
@@ -296,7 +296,7 @@ def get_all_correlated_list():
     [filtered_correlated_coin_list.append(
         x) for x in correlated_coin_list if x not in filtered_correlated_coin_list]
 
-    print(filtered_correlated_coin_list)
+    print(sorted(filtered_correlated_coin_list))
 
 
 def group_correlations(correlations):
@@ -331,7 +331,7 @@ def group_correlations(correlations):
 
     for i in range(len(coin_groups)):
         print("Group "+str(i+1)+":")
-        print(coin_groups[i])
+        print(sorted(coin_groups[i]))
 
 
 def verify_coins_files():
